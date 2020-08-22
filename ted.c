@@ -7,6 +7,8 @@
 #include <unistd.h>
 #include <termios.h>
 
+#define CTRL_KEY(k) ((k) & 0x1f)
+
 /** data **/
 
 struct termios orig_termios;
@@ -28,7 +30,7 @@ int main() {
         } else { 
             printf("%d ('%c')\r\n", c, c);
         }
-        if (c == 'q') break;
+        if (c == CTRL_KEY('q')) break;
     }
 
     return 0;
@@ -45,7 +47,7 @@ void enableRawMode() {
     if (tcgetattr(STDIN_FILENO, &orig_termios) == -1) die("tcgetattr");
     atexit(disableRawMode);
 
-    struct t    ermios raw = orig_termios;
+    struct termios raw = orig_termios;
     raw.c_iflag &= ~(BRKINT | ICRNL | INPCK | IXON);
     raw.c_oflag &= ~(OPOST);
     raw.c_cflag |= (CS8);
