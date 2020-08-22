@@ -28,9 +28,13 @@ void die(const char *s);
 char editorReadKey();
 void editorProcessKeypress();
 void editorRefreshScreen();
+int getWindowSize( int *rows, int *cols);
+void initEditor();
+
 
 int main() {
     enableRawMode();
+    initEditor();
     
     while(1) {
         editorRefreshScreen();
@@ -40,6 +44,9 @@ int main() {
     return 0;
 }
 
+void initEditor() {
+    if (getWindowSize(&E.screenrows, &E.screencols) == -1) die("getWindowSize");
+}
 
 /** terminal **/
 
@@ -112,7 +119,7 @@ void editorProcessKeypress() {
 /** output **/
 void editorDrawRows() {
     int y;
-    for (y = 0; y < 24; y++) {
+    for (y = 0; y < E.screenrows; y++) {
         write(STDOUT_FILENO, "~\r\n", 3);
     }
 }
