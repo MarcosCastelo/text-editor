@@ -9,7 +9,11 @@
 #include <unistd.h>
 #include <termios.h>
 
+/** defines **/
+
+#define TED_VERSION "0.0.1"
 #define CTRL_KEY(k) ((k) & 0x1f)
+#define ABUF_INIT {NULL, 0}
 
 /** data **/
 
@@ -29,7 +33,6 @@ struct abuf {
     int len;
 };
 
-#define ABUF_INIT {NULL, 0}
 
 void abAppend( struct abuf *ab, const char *s, int len) {
     char *new = realloc(ab->b, ab->len + len);
@@ -165,8 +168,17 @@ void editorProcessKeypress() {
 void editorDrawRows(struct abuf *ab) {
     int y;
     for (y = 0; y < E.screenrows; y++) {
-        abAppend(ab, "~", 1);
-
+        if (y == 0) {
+            char welcome[80];
+            int welcomelen = snprintf(welcome, sizeof(welcome),
+                "TED editor -- version %s", TED_VERSION);
+            if (welcomelen > E.screencols) welcomelen = E.screencols;
+            abAppend(ab, welcome, welcomelen);
+        } else {
+            abAppend(ab, "~", 1);
+        }
+        
+        abAppend(ab, "\x1b[K", 3);
         if (y < E.screenrows - 1) {
             abAppend(ab, "\r\n", 2);
         }
@@ -175,12 +187,14 @@ void editorDrawRows(struct abuf *ab) {
 
 void editorRefreshScreen() {
     struct abuf ab = ABUF_INIT;
-    abAppend(&ab, "\x1b[2J", 4);
+
+    abAppend(&ab, "\x1b[?25l", 6);
     abAppend(&ab, "\x1b[H", 3);
 
     editorDrawRows(&ab);
 
     abAppend(&ab, "\x1b[H", 3);
+    abAppend(&ab, "\x1b[?25h", 6);
     
     write(STDOUT_FILENO, ab.b, ab.len);
     abFree(&ab);
