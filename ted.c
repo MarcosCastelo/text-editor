@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <sys/ioctl.h>
 #include <unistd.h>
 #include <termios.h>
 
@@ -12,6 +13,8 @@
 /** data **/
 
 struct editorConfig {
+    int screenrows;
+    int screencols;
     struct termios orig_termios;
 };
 
@@ -37,7 +40,20 @@ int main() {
     return 0;
 }
 
+
 /** terminal **/
+
+int getWindowSize(int *rows, int *cols) {
+    struct winsize ws;
+
+    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == -1 || ws.ws_col == 0) {
+        return -1;
+    } else {
+        *cols = ws.ws_col;
+        *rows = ws.ws_row;
+        return 0;
+    }
+}
 
 void disableRawMode() {
     if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &E.orig_termios) == -1)
