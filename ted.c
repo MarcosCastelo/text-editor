@@ -15,8 +15,8 @@
 
 /** defines **/
 
-
 #define TED_VERSION "0.0.1"
+#define TED_TAB_STOP 8
 #define CTRL_KEY(k) ((k) & 0x1f)
 #define ABUF_INIT {NULL, 0}
 
@@ -99,13 +99,22 @@ void abFree(struct abuf *ab) {
 /** row operations **/
 
 void editorUpdateRow(erow *row) {
-  free(row->render);
-  row->render = malloc(row->size + 1);
-
+  int tabs = 0;
   int j;
+  for (j = 0; j < row->size; j++)
+    if (row->chars[j] == '\t') tabs++;
+  
+  free(row->render);
+  row->render = malloc(row->size + tabs*(TED_TAB_STOP - 1) + 1);
+
   int idx = 0;
   for (j = 0; j < row->size; j++) {
-    row->render[idx++] = row->chars[j];
+    if (row->chars[j] == '\t') {
+      row->render[idx++] = row->chars[j];
+      while (idx % TED_TAB_STOP != 0) row->render[idx++] = ' ';
+    } else {
+      row->render[idx++] = row->chars[j];
+    }
   }
 
   row->render[idx] = '\0';
